@@ -3,7 +3,8 @@ const express = require('express');
 const router = express.Router();
 const treeSpecies = require('../controllers/treeSpeciesController');
 const planting = require('../controllers/plantingRecordsController');
-const contributions = require('../controllers/communityContributionsController');
+const communityContributionsController = require('../controllers/communityContributionsController');
+
 
 // Tree Species Routes
 router.post('/tree-species', treeSpecies.createTreeSpecies);
@@ -17,10 +18,14 @@ router.get('/planting-records/project/:project_id', planting.getPlantingRecordsB
 router.get('/planting-records/user/:user_id', planting.getPlantingRecordsByUser);
 router.delete('/planting-records/:id', planting.deletePlantingRecord);
 
-// Community Contributions Routes
-router.post('/contributions', contributions.createContribution);
-router.get('/contributions/user/:user_id', contributions.getContributionsByUser);
-router.get('/contributions/project/:project_id', contributions.getContributionsByProject);
-router.delete('/contributions/:id', contributions.deleteContribution);
+
+router.post('/contributions', communityContributionsController.addContribution);
+router.get('/contributions/user/:userId', communityContributionsController.getUserContributions);
+router.get('/contributions/planting/:date', communityContributionsController.getTreePlantingContributionsByDate);
+router.get('/contributions/total-trees-planted/:userId', communityContributionsController.getTotalTreesPlanted);
+router.put('/contributions/update-frequency', communityContributionsController.updateMaintenanceFrequency);
+router.get('/contributions/all', communityContributionsController.getAllContributions);
+router.put('/contributions/:id/status', communityContributionsController.updateStatus);
+
 
 module.exports = router;
