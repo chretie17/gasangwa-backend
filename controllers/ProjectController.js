@@ -16,7 +16,6 @@ exports.addProject = [upload.array('images'), (req, res) => {
       status,
       start_date,
       end_date,
-      budget,
       location,
       assigned_user,
   } = req.body;
@@ -28,7 +27,6 @@ exports.addProject = [upload.array('images'), (req, res) => {
       status,
       start_date,
       end_date,
-      budget,
       location,
       assigned_user,  
   });
@@ -48,8 +46,8 @@ exports.addProject = [upload.array('images'), (req, res) => {
   // Insert the project first
   const query = `
     INSERT INTO projects 
-    (project_name, description, status, start_date, end_date, budget, location, assigned_user)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    (project_name, description, status, start_date, end_date, location, assigned_user)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(query, [
@@ -58,7 +56,6 @@ exports.addProject = [upload.array('images'), (req, res) => {
       status,
       start_date,
       end_date,
-      budget,
       location,
       assigned_user, 
   ], (err, result) => {
@@ -118,7 +115,7 @@ exports.getProjects = (req, res) => {
         const projectMap = {};
   
         projects.forEach((project) => {
-            const { id, image, assigned_user, project_name, description, status, start_date, end_date, budget, location } = project;
+            const { id, image, assigned_user, project_name, description, status, start_date, end_date,  location } = project;
   
             // If the project doesn't exist in the map, create a new entry
             if (!projectMap[id]) {
@@ -129,7 +126,6 @@ exports.getProjects = (req, res) => {
                     status,
                     start_date: format(new Date(start_date), 'MM/dd/yyyy'), // Format start_date
                     end_date: format(new Date(end_date), 'MM/dd/yyyy'), // Format end_date
-                    budget,
                     location,
                     assigned_user,
                     images: []
@@ -258,7 +254,7 @@ exports.getPublicProjectStatus = (req, res) => {
 
     const query = `
         SELECT p.id, p.project_name, p.description, p.status, 
-               p.start_date, p.end_date, p.budget, p.location,
+               p.start_date, p.end_date, p.location,
                u.username AS assigned_user,
                pi.image 
         FROM projects p
@@ -285,7 +281,6 @@ exports.getPublicProjectStatus = (req, res) => {
             status: results[0].status,
             start_date: results[0].start_date,
             end_date: results[0].end_date,
-            budget: results[0].budget,
             location: results[0].location,
             assigned_user: results[0].assigned_user,
             images: results.map(row => row.image ? `data:image/jpeg;base64,${row.image.toString('base64')}` : null).filter(img => img !== null)
@@ -297,7 +292,7 @@ exports.getPublicProjectStatus = (req, res) => {
 
 exports.updateProjectDetails = (req, res) => {
     const { project_id } = req.params;
-    const { project_name, description, status, start_date, end_date, budget, location, assigned_user } = req.body;
+    const { project_name, description, status, start_date, end_date, location, assigned_user } = req.body;
     const imageBlobs = req.files ? req.files.map(file => file.buffer) : null;
 
     console.log(`Updating project ID: ${project_id}`);
@@ -309,11 +304,11 @@ exports.updateProjectDetails = (req, res) => {
     const updateQuery = `
         UPDATE projects 
         SET project_name = ?, description = ?, status = ?, start_date = ?, 
-            end_date = ?, budget = ?, location = ?, assigned_user = ? 
+            end_date = ?, location = ?, assigned_user = ? 
         WHERE id = ?
     `;
 
-    const updateValues = [project_name, description, status, start_date, end_date, budget, location, assigned_user, project_id];
+    const updateValues = [project_name, description, status, start_date, end_date, location, assigned_user, project_id];
 
     db.query(updateQuery, updateValues, (err, result) => {
         if (err) {

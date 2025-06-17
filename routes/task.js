@@ -22,6 +22,15 @@ router.delete('/:taskId', taskController.deleteTask);
 router.get('/assigned/:userId', taskController.getAssignedTasks);
 
 router.put('/:taskId/status', taskController.updateTaskStatus);
+// Updated route for status update with image upload
+router.put('/tasks/:taskId/status', taskController.updateTaskStatus);
+
+// Optional: Route to serve task images
+router.get('/tasks/images/:filename', taskController.getTaskImage);
+
+// Optional: Route to get all images for a specific task
+router.get('/tasks/:taskId/images', taskController.getTaskImages);
+
 
 
 module.exports = router;
