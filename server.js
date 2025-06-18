@@ -10,6 +10,7 @@ const publicRoutes = require('./routes/public');
 const dashboardRoutes = require('./routes/dash');
 const reportsRoutes = require('./routes/report');
 const allroutes = require('./routes/plantingandtreeandcontribution');
+const fundingRoutes = require('./routes/funding');
 const app = express();
 const port = 3000;
 
@@ -32,6 +33,8 @@ app.use('/api/tas', tasRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api', allroutes)
+app.use('/api/funding', fundingRoutes);
+
 
 // Start Server
 app.listen(port, () => {
