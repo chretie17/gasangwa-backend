@@ -50,7 +50,7 @@ exports.updateTaskStatus = [
   upload.single('taskImage'), // Add multer middleware
   (req, res) => {
     const { taskId } = req.params;
-    const { status, userLocation } = req.body;
+const { status, userLocation, latitude, longitude } = req.body;
 
     if (!status) {
       return res.status(400).json({ message: 'Status is required.' });
@@ -67,12 +67,12 @@ exports.updateTaskStatus = [
     const imagePath = req.file.path;
 
     // Update task with status, image path, and user location
-    const query = `
-      UPDATE tasks
-      SET status = ?, progress_image = ?, user_location = ?, updated_at = NOW()
-      WHERE id = ?
-    `;
-    const values = [status, imagePath, userLocation.trim(), taskId];
+   const query = `
+  UPDATE tasks
+  SET status = ?, progress_image = ?, user_location = ?, latitude = ?, longitude = ?, updated_at = NOW()
+  WHERE id = ?
+`;
+const values = [status, imagePath, userLocation.trim(), latitude || null, longitude || null, taskId];
 
     db.query(query, values, (err, result) => {
       if (err) {
@@ -238,7 +238,7 @@ exports.deleteTask = (req, res) => {
   });
 };
 
-  exports.getTasks = (req, res) => {
+ exports.getTasks = (req, res) => {
   const query = `
     SELECT t.*,
       u1.username AS created_by_username,
@@ -247,14 +247,23 @@ exports.deleteTask = (req, res) => {
     LEFT JOIN users u1 ON t.created_by = u1.id
     LEFT JOIN users u2 ON t.assigned_user = u2.id
   `;
+
   db.query(query, (err, results) => {
     if (err) return res.status(500).json({ message: 'Error fetching tasks' });
 
+    const baseUrl = req.protocol + '://' + req.get('host'); // e.g. http://localhost:3000
+
     const formatted = results.map(task => ({
       ...task,
-      // keep your date formatting...
-      location: task.location  // ← include location
+      location: task.location || '',
+      user_location: task.user_location || '',
+      latitude: task.latitude || null,
+      longitude: task.longitude || null,
+      progress_image: task.progress_image 
+        ? `${baseUrl}/${task.progress_image.replace(/\\/g, '/')}` // Converts backslashes to slashes for Windows paths
+        : null,
     }));
+
     res.json(formatted);
   });
 };
