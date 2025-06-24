@@ -24,7 +24,7 @@ router.get('/assigned/:userId', taskController.getAssignedTasks);
 router.put('/:taskId/status', taskController.updateTaskStatus);
 // Updated route for status update with image upload
 router.put('/tasks/:taskId/status', taskController.updateTaskStatus);
-
+router.get('/:taskId/details', taskController.getTaskDetails);
 // Optional: Route to serve task images
 router.get('/tasks/images/:filename', taskController.getTaskImage);
 

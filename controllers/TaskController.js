@@ -44,6 +44,51 @@ const upload = multer({
     }
   }
 });
+exports.getTaskDetails = (req, res) => {
+  const { taskId } = req.params;
+  const query = `
+    SELECT t.*, 
+      u1.username AS created_by_username,
+      u2.username AS assigned_user_username,
+      p.project_name,
+      DATE_FORMAT(t.start_date, '%Y-%m-%dT%H:%i') as formatted_start_date,
+      DATE_FORMAT(t.end_date, '%Y-%m-%dT%H:%i') as formatted_end_date,
+      DATE_FORMAT(t.created_at, '%Y-%m-%d %H:%i:%s') as created_at_formatted,
+      DATE_FORMAT(t.updated_at, '%Y-%m-%d %H:%i:%s') as updated_at_formatted
+    FROM tasks t
+    LEFT JOIN users u1 ON t.created_by = u1.id
+    LEFT JOIN users u2 ON t.assigned_user = u2.id
+    LEFT JOIN projects p ON t.project_id = p.id
+    WHERE t.id = ?
+  `;
+
+  db.query(query, [taskId], (err, result) => {
+    if (err) {
+      console.error('Error fetching task details:', err);
+      return res.status(500).json({ message: 'Error fetching task details' });
+    }
+    if (result.length === 0) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+    
+    const task = result[0];
+    const baseUrl = req.protocol + '://' + req.get('host');
+    
+    // Format the response with all details
+    const taskDetails = {
+      ...task,
+      progress_image: task.progress_image 
+        ? `${baseUrl}/${task.progress_image.replace(/\\/g, '/')}` 
+        : null,
+      location: task.location || '',
+      user_location: task.user_location || '',
+      latitude: task.latitude || null,
+      longitude: task.longitude || null,
+    };
+    
+    res.status(200).json(taskDetails);
+  });
+};
 
 // Updated updateTaskStatus function
 exports.updateTaskStatus = [

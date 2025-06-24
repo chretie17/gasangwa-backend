@@ -11,6 +11,7 @@ const dashboardRoutes = require('./routes/dash');
 const reportsRoutes = require('./routes/report');
 const allroutes = require('./routes/plantingandtreeandcontribution');
 const fundingRoutes = require('./routes/funding');
+const treesRoutes = require('./routes/Trees'); // Import trees routes
 const app = express();
 const port = 3000;
 
@@ -31,6 +32,7 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/tas', tasRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/', treesRoutes); // Use trees routes
 app.use('/api/reports', reportsRoutes);
 app.use('/api', allroutes)
 app.use('/api/funding', fundingRoutes);
