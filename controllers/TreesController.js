@@ -13,7 +13,7 @@ exports.getPlantedTrees = (req, res) => {
     LEFT JOIN users u1 ON t.created_by = u1.id
     LEFT JOIN users u2 ON t.assigned_user = u2.id
     LEFT JOIN projects p ON t.project_id = p.id
-    WHERE t.status = 'Completed' 
+WHERE 1=1
       AND t.latitude IS NOT NULL 
       AND t.longitude IS NOT NULL
       AND (t.title LIKE '%tree%' OR t.title LIKE '%plant%' OR t.description LIKE '%tree%' OR t.description LIKE '%plant%')
