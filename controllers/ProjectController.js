@@ -9,8 +9,12 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // 1. Add a New Project (with image and other data)
-exports.addProject = [upload.array('images'), (req, res) => {
-  const {
+
+
+exports.addProject = [
+  upload.array('images'),
+  (req, res) => {
+    const {
       project_name,
       description,
       status,
@@ -18,80 +22,79 @@ exports.addProject = [upload.array('images'), (req, res) => {
       end_date,
       location,
       assigned_user,
-  } = req.body;
+    } = req.body;
 
-  console.log('Received request to add project');
-  console.log('Project Details:', {
-      project_name,
-      description,
-      status,
-      start_date,
-      end_date,
-      location,
-      assigned_user,  
-  });
-
-  if (!assigned_user) {
+    // basic required-field check
+    if (!assigned_user) {
       return res.status(400).json({ message: 'Assigned user is required' });
-  }
+    }
 
-  if (!req.files || req.files.length === 0) {
-      console.log('Error: No images uploaded');
-      return res.status(400).json({ message: 'No images uploaded' });
-  }
-
-  // Convert each image buffer to Blob
-  const imageBlobs = req.files.map(file => file.buffer);
-
-  // Insert the project first
-  const query = `
-    INSERT INTO projects 
-    (project_name, description, status, start_date, end_date, location, assigned_user)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-  `;
-
-  db.query(query, [
+    // 1) Insert the new project
+    const insertProjectSql = `
+      INSERT INTO projects
+        (project_name, description, status, start_date, end_date, location, assigned_user)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    const projectValues = [
       project_name,
       description,
       status,
       start_date,
       end_date,
       location,
-      assigned_user, 
-  ], (err, result) => {
+      assigned_user,
+    ];
+
+    db.query(insertProjectSql, projectValues, (err, result) => {
       if (err) {
-          console.log('Error adding project:', err);
-          return res.status(500).json({ message: 'Error adding project' });
+        console.error('Error adding project:', err);
+        return res.status(500).json({ message: 'Error adding project' });
       }
 
-      console.log('Project added successfully, Project ID:', result.insertId);
+      const projectId = result.insertId;
 
-      // Insert each image into the `project_images` table
-      const imageQueries = imageBlobs.map(imageBlob => {
-          return new Promise((resolve, reject) => {
-              const imageQuery = `
-                  INSERT INTO project_images (project_id, image)
-                  VALUES (?, ?)
-              `;
-              db.query(imageQuery, [result.insertId, imageBlob], (err) => {
-                  if (err) reject(err);
-                  resolve();
-              });
+      // 2) If any images were uploaded, insert them; otherwise we're done
+      const files = req.files || [];
+      if (files.length === 0) {
+        return res.status(201).json({
+          message: 'Project added successfully (no images)',
+          projectId
+        });
+      }
+
+      // build a promise for each image insert
+      const insertImagePromises = files.map(file => {
+        return new Promise((resolve, reject) => {
+          const insertImageSql = `
+            INSERT INTO project_images (project_id, image)
+            VALUES (?, ?)
+          `;
+          db.query(insertImageSql, [projectId, file.buffer], err => {
+            if (err) return reject(err);
+            resolve();
           });
+        });
       });
 
-      // Wait for all images to be inserted
-      Promise.all(imageQueries)
-          .then(() => {
-              console.log('Images added successfully');
-              res.status(200).json({ message: 'Project added successfully', projectId: result.insertId });
-          })
-          .catch(err => {
-              console.log('Error adding images:', err);
-              res.status(500).json({ message: 'Error adding images' });
+      // wait for all image inserts
+      Promise.all(insertImagePromises)
+        .then(() => {
+          res.status(201).json({
+            message: 'Project added successfully (with images)',
+            projectId
           });
-  });
-}];
+        })
+        .catch(imageErr => {
+          console.error('Error saving images:', imageErr);
+          // project exists but some images failed
+          res.status(201).json({
+            message: 'Project created; failed to save some images',
+            projectId
+          });
+        });
+    });
+  }
+];
 
 
 
