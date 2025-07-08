@@ -15,7 +15,6 @@ exports.getProjectOverview = (req, res) => {
             p.status,
             DATE_FORMAT(p.start_date, '%Y-%m-%d') AS start_date,
             DATE_FORMAT(p.end_date, '%Y-%m-%d') AS end_date,
-            p.budget,
             u.username AS assigned_user,
             COUNT(DISTINCT t.id) AS total_tasks,
             SUM(CASE WHEN t.status = 'Completed' THEN 1 ELSE 0 END) AS completed_tasks,
@@ -37,7 +36,7 @@ exports.getProjectOverview = (req, res) => {
         query += ` AND p.start_date <= '${formatDateForSQL(end_date)}' AND p.end_date >= '${formatDateForSQL(start_date)}'`;
     }
 
-    query += ` GROUP BY p.id, p.project_name, p.status, p.start_date, p.end_date, p.budget, u.username`;
+    query += ` GROUP BY p.id, p.project_name, p.status, p.start_date, p.end_date,  u.username`;
 
     db.query(query, (err, results) => {
         if (err) {
